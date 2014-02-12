@@ -20,11 +20,16 @@ var intervalId = null;
 
 var level = new Level();
 var paused = false;
+var game_started = false;
 
 
-///////////////////////
-// Utility functions //
-///////////////////////
+///////////////////////////////////
+// Utility classes and functions //
+///////////////////////////////////
+function WelcomeScreen() {
+    this.timer = 4000;
+};
+
 function drawRipple(x, y) {
     if (ripples.length < maxRipples) {
         ripples.push(new Ripple(x, y));
@@ -39,22 +44,36 @@ function clone(obj) {
         if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
     }
     return copy;
-}
-
+};
 
 ////////////////////////////
 // Game control functions //
 ////////////////////////////
 
+function mouseoverHandler(evt) {
+    // TODO
+};
+
+function menuMouseDownHandler(evt) {
+    if (!game_started) {
+        startGame();   
+        mouseDownHandler(evt);
+    }
+};
+
 function mouseDownHandler(evt) {
-    var x = evt.clientX - canvas.getBoundingClientRect().left;
-    var y = evt.clientY - canvas.getBoundingClientRect().top;
-    drawRipple(x, y);
+    if (evt.button == 0) {
+        var x = evt.clientX - canvas.getBoundingClientRect().left;
+        var y = evt.clientY - canvas.getBoundingClientRect().top;
+        drawRipple(x, y);
+    }
 };
 
 function keydownHandler(evt) {
-    if (evt.keyCode == 27){
-        pause();
+    if (game_started) {
+        if (evt.keyCode == 27){
+            pause();
+        }
     }
 };
 
@@ -75,6 +94,20 @@ function pause() {
 // Update functions //
 //////////////////////
 
+function updateWelcomeScreen() {
+    // TODO
+    ctx.save();
+
+    ctx.font = "2.5em Ubuntu";
+    ctx.textAlign = 'center';
+    ctx.fillStyle = "#FFFFFF";
+    ctx.strokeStyle = "#000000";
+    ctx.fillText("ripples", width/2, height/2);
+    ctx.strokeText("ripples", width/2, height/2);
+
+    ctx.restore();
+};
+
 function updateWorld() {
     // TODO: should the level own the ripples?
 
@@ -94,8 +127,6 @@ function updateWorld() {
 };
 
 function updateCanvas() {
-    // TODO: add layer of abstraction between main runtime loop and updateCanvas
-
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
     ctx.save();
@@ -136,6 +167,11 @@ function updatePauseScreen() {
 ////////////////////////
 // MAIN RUNTIME LOOPS //
 ////////////////////////
+function welcomeScreenLoop(){
+    updateCanvas();
+    updateWelcomeScreen();
+};
+
 function mainLoop() {
     // TODO: use this layer for gameplay stuff (win/lose state)
     // TODO: win condition
@@ -155,12 +191,17 @@ function pausedLoop() {
 // Initialization functions //
 //////////////////////////////
 function initializeGame() {
-    // TODO: Welcome screen
-    canvas.addEventListener('mousedown', mouseDownHandler, false);
-    window.addEventListener('keydown', keydownHandler, true);
-    intervalId = setInterval(mainLoop, timeStep);
+    canvas.addEventListener('mousedown', menuMouseDownHandler, false);
+    intervalId = setInterval(welcomeScreenLoop, timeStep);
 };
 
+function startGame() {
+    canvas.addEventListener('mousedown', mouseDownHandler, false);
+    window.addEventListener('keydown', keydownHandler, true);
+    game_started = true;
+    clearInterval(intervalId);
+    intervalId = setInterval(mainLoop, timeStep);
+};
 
 ////////////////
 // Game Start //
