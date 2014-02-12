@@ -22,8 +22,22 @@ function drawRipple(x, y) {
     ripples.push(new Ripple(x, y));
 };
 
-// TODO: Add isObjectInList() method, do a === on all attrs
-//   maybe make it a list.prototype?
+// Line segments will be created between adjacent points
+// in "points", and the last point will be connected to the first.
+function getSegments(points) {
+    var segments = [];
+    if (points.length == 2) {
+        return [points];
+    }
+    for (var i=0; i<points.length; i++) {
+        if (i == 0) {
+            segments.push([points[points.length - 1], points[i]]);
+        } else {
+            segments.push([points[i - 1], points[i]]);
+        }
+    }
+    return segments;
+};
 
 // TODO: remove?
 function clone(obj) {
@@ -62,8 +76,13 @@ function updateCanvas() {
         ripples[i].move();
     }
 
+    // TODO: move all obstacles
+
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
+
+    // Draw level
+    level.draw();
 
     // Draw all ripples
     for (var i=0; i<ripples.length; i++) {

@@ -2,7 +2,9 @@ function Point(x, y) {
 	this.x = x;
 	this.y = y;
 
-};function Arc(x, y, radius, start, end) {
+};
+
+function Arc(x, y, radius, start, end) {
 	this.x = x;
 	this.y = y;
 	this.radius = (typeof radius === "undefined") ? 0 : radius;
