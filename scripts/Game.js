@@ -9,7 +9,7 @@ var height = canvas.height;
 var ripples = [];
 var maxRipples = 40;
 
-var maxTimer = 400;
+var maxTimer = 500;
 
 var timeStep = 17; // in ms, equal to (1000/desired_fps)
 
@@ -21,6 +21,9 @@ var level = new Level();
 function drawRipple(x, y) {
     ripples.push(new Ripple(x, y));
 };
+
+// TODO: Add isObjectInList() method, do a === on all attrs
+//   maybe make it a list.prototype?
 
 // TODO: remove?
 function clone(obj) {
