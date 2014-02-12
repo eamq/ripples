@@ -63,6 +63,12 @@ function mouseoverHandler(evt) {
     // TODO: menu object highlight
 };
 
+
+function welcomeScreenMouseDownHandler(evt) {
+    startGame();
+    mouseDownHandler(evt);
+}; 
+
 function mouseDownHandler(evt) {
     if (evt.button == 0) {
         var x = evt.clientX - canvas.getBoundingClientRect().left;
@@ -72,10 +78,8 @@ function mouseDownHandler(evt) {
 };
 
 function keydownHandler(evt) {
-    if (game_started) {
-        if (evt.keyCode == 27){
-            pause();
-        }
+    if (evt.keyCode == 27) {
+        pause();
     }
 };
 
@@ -194,17 +198,13 @@ function pausedLoop() {
 // Initialization functions //
 //////////////////////////////
 function initializeGame() {
-    canvas.addEventListener(
-        'mousedown', 
-        function(evt) {
-            startGame();
-            mouseDownHandler(evt);
-        }, 
-        false);
+    canvas.addEventListener('mousedown', welcomeScreenMouseDownHandler, false);
+    clearInterval(intervalId);
     intervalId = setInterval(welcomeScreenLoop, timeStep);
 };
 
-function startGame() {
+function startGame() {    
+    canvas.removeEventListener('mousedown', welcomeScreenMouseDownHandler);
     canvas.addEventListener('mousedown', mouseDownHandler, false);
     window.addEventListener('keydown', keydownHandler, true);
     game_started = true;
