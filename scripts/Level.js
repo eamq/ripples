@@ -1,3 +1,6 @@
+///////////
+// Level //
+///////////
 function Level(border) {
 	var default_border = [
 		new Point(0, 0),          // top-left
@@ -9,22 +12,26 @@ function Level(border) {
 	this.border = (typeof border === "undefined") ? default_border : border;
 	this.obstacles = [];
 	//this.obstacles = [new Obstacle([new Point(200, 200), new Point(300, 300)])];
+
+	// TODO: background
+	// TODO: foreground
+	// TODO: goal
 };
 
 Level.prototype.getBorderSegments = function() {
 	return getSegments(this.border);
 };
 
-Level.prototype.getObstacleSegments = function() {
+Level.prototype.getAllObstacleSegments = function() {
 	var segments = [];
 	for (var i=0; i<this.obstacles.length; i++) {
-		segments = segments.concat(getSegments(this.obstacles[i].points));
+		segments = segments.concat(this.obstacles[i].getObstacleSegments());
 	}
 	return segments;
 };
 
 Level.prototype.getCollidables = function() {
-	return this.getBorderSegments().concat(this.getObstacleSegments());
+	return this.getBorderSegments().concat(this.getAllObstacleSegments());
 };
 
 Level.prototype.loadLevel = function(filename) {
@@ -32,8 +39,11 @@ Level.prototype.loadLevel = function(filename) {
 };
 
 Level.prototype.draw = function() {
-	// draw edges
 	ctx.save();
+
+    // TODO: draw background
+
+	// draw edges
 	ctx.strokeStyle = "#000000";
 	ctx.beginPath();
 	var last = this.border[this.border.length - 1];
@@ -42,12 +52,13 @@ Level.prototype.draw = function() {
 		ctx.lineTo(this.border[i].x, this.border[i].y);
 	}
 	ctx.stroke();
+	// TODO: fill. use alpha to let fancy backgrounds shine through?
+	// TODO: draw fancy border effect
 	
 
 	// draw obstacles
 	ctx.strokeStyle = "#333333";
 	for (var i=0; i<this.obstacles.length; i++) {
-		ctx.save();
 		var last = this.obstacles[i].points[this.obstacles[i].points.length - 1];
 		ctx.beginPath();
 		ctx.moveTo(last.x, last.y);
@@ -55,13 +66,22 @@ Level.prototype.draw = function() {
 			ctx.lineTo(this.obstacles[i].points[j].x, this.obstacles[i].points[j].y);
 		}
 		ctx.stroke();
-		ctx.restore();
 	}
+
+	// TODO: draw foreground
+
 	ctx.restore();
 };
 
+//////////////
+// Obstacle //
+//////////////
 function Obstacle(points) {
 	this.points = (typeof points === "undefined") ? [] : points;
 	// TODO: dx, dy, da
 	// TODO: color?
 };
+
+Obstacle.prototype.getObstacleSegments = function() {
+	return getSegments(this.points);
+}

@@ -1,3 +1,6 @@
+////////////
+// Ripple //
+////////////
 function Ripple(x, y) { 
 	this.timer = maxTimer;
 
@@ -28,12 +31,8 @@ Ripple.prototype.processCollisions = function() {
 
 Ripple.prototype.isArcInList = function(arc) {
 	for (var i=0; i<this.arcs.length; i++) {
-		if (arc.x === this.arcs[i].x && 
-				arc.y === this.arcs[i].y && 
-				arc.radius === this.arcs[i].radius && 
-				this.arcs[i].start === arc.start && 
-				this.arcs[i].end === arc.end) {
-			return true;
+		if (this.arcs[i].equals(arc)) {
+			return true; 
 		}
 	}
 	return false;
@@ -55,8 +54,14 @@ Ripple.prototype.draw = function() {
 						this.color['green'] + ", " +
 						this.color['blue'] + ", " +
 						alpha + ")";
+	// not sure if we want this in the long run, but damn it's pretty
+	ctx.fillStyle = "rgba(" +
+						this.color['red'] + ", " +
+						this.color['green'] + ", " +
+						this.color['blue'] + ", " +
+						0.1 * alpha + ")";
 	for (var i=0; i<this.arcs.length; i++) {
-		ctx.save();
+		// TODO: move to Arc.draw()
 		ctx.beginPath();
 		ctx.arc(this.arcs[i].x, 
 				this.arcs[i].y, 
@@ -64,7 +69,7 @@ Ripple.prototype.draw = function() {
 				this.arcs[i].start, 
 				this.arcs[i].end);
 		ctx.stroke();
-		ctx.restore();
+		ctx.fill();
 	}
 	ctx.restore();
 };
