@@ -2,8 +2,11 @@ function Ripple(x, y, radius, start, end) {
 	this.x = x;
 	this.y = y;
 	this.radius = (typeof radius === "undefined") ? 0 : radius;
+	// TODO: move start and end to Arc (maybe x and y too)
 	this.start = (typeof start === "undefined") ? 0 : start;
 	this.end = (typeof end === "undefined") ? 2 * Math.PI : end;
+
+	this.arcs = [new Arc(this.x, this.y, this.radius, this.start, this.end)];
 
 	this.timer = maxTimer;
 
@@ -11,92 +14,115 @@ function Ripple(x, y, radius, start, end) {
 		'red': Math.round(Math.random() * 215),
 		'green': Math.round(Math.random() * 215),
 		'blue': Math.round(Math.random() * 215)
-	}
-
-	this.drawnRefPoints = {};
-	this.drawnRefPoints[[x, y]] = true;
-
-	this.tempRefPoints = [];
-
+	};
 };
 
-// Returns a list of points of intersection with the given line segment.
-//
-// Side Effects: adds "mirrored" points to this.refPoints for later use
-Ripple.prototype.isIntersectingLine = function(p1, p2) {
-	var x1 = p1[0]
-	var y1 = p1[1]
-	var x2 = p2[0]
-	var y2 = p2[1]
+// TODO: move mathy collision methods to Arc
 
-	var dx = x1 - x2;
-	var dy = y1 - y2;
+Ripple.prototype.getPerpendicularFoot = function(p1, p2) {
+	var dx = p1.x - p2.x;
+	var dy = p1.y - p2.y;
+	var k = (dy*(this.x-p1.x) - dx*(this.y-p1.y))/((dx*dx) + (dy*dy));
+
+	return new Point(this.x - k * dy, this.y + k * dx);
+};
+
+// Returns points of intersection with the given line segment ([] if none exist)
+Ripple.prototype.getCollisionPoints = function(p1, p2) {
+	// TODO: allow me to have multiple collision points with one segment
+	points = [];
+
+	var dx = p1.x - p2.x;
+	var dy = p1.y - p2.y;
 
 	// is perpendicular distance greater than the radius?
-	var pd = Math.abs((dy*this.x) - (dx*this.y) + (x1*y2) - (x2*y1))/Math.sqrt((dx*dx) + (dy*dy));
+	var pd = Math.abs((dy*this.x) - (dx*this.y) + (p1.x*p2.y) - (p2.x*p1.y))/Math.sqrt((dx*dx) + (dy*dy));
 	if (pd > this.radius) {
-		return false;
+		return points;
 	}
 
 	// will arc miss segment?
-	var angle1 = (Math.atan((y1-this.y)/(x1-this.x)) + 2*Math.PI) % 2*Math.PI;
-	var	angle2 = (Math.atan((y2-this.y)/(x2-this.x)) + 2*Math.PI) % 2*Math.PI;
+	var angle1 = (Math.atan((p1.y-this.y)/(p1.x-this.x)) + 2*Math.PI) % 2*Math.PI;
+	var	angle2 = (Math.atan((p2.y-this.y)/(p2.x-this.x)) + 2*Math.PI) % 2*Math.PI;
 	if ((angle1 < this.start || angle1 > this.end) &&
 			(angle2 < this.start || angle2 > this.end)) {
-		return false;
+		return points;
 	}
 
 	// perpendicular foot on line segment?
-	var k = (dy*(this.x-x1) - dx*(this.y-y1))/((dx*dx) + (dy*dy));
-	var px = this.x - k * dy;
-	var py = this.y + k * dx;
-	var refPoint = [2*px-this.x, 2*py-this.y];
-	if (px >= Math.min(x1, x2) && px <= Math.max(x1, x2) &&
-			py >= Math.min(y1, y2) && py <= Math.max(y1, y2)) {
-		if (this.tempRefPoints.indexOf(refPoint) == -1) {
-			this.tempRefPoints.push(refPoint);
-		}
-		return true;
+	var foot = this.getPerpendicularFoot(p1, p2);
+	if (foot.x >= Math.min(p1.x, p2.x) && foot.x <= Math.max(p1.x, p2.x) &&
+			foot.y >= Math.min(p1.y, p2.y) && foot.y <= Math.max(p1.y, p2.y)) {
+		// TODO: Figure out actual point(s) of intersection
+		points.push(foot);
+		return points;
 	}
 	
 	// is distance from the closest endpoint less than the radius?
-	var dist = Math.min(Math.sqrt(Math.pow(x1-this.x, 2) + Math.pow(y1-this.y, 2)),
-		Math.sqrt(Math.pow(x2-this.x, 2) + Math.pow(y2-this.y, 2)));
+	var dist = Math.min(Math.sqrt(Math.pow(p1.x-this.x, 2) + Math.pow(p1.y-this.y, 2)),
+		Math.sqrt(Math.pow(p2.x-this.x, 2) + Math.pow(p2.y-this.y, 2)));
 	if (dist < this.radius) {
-		if (this.tempRefPoints.indexOf(refPoint) == -1) {
-			this.tempRefPoints.push(refPoint);
-		}
-		return true;
+		// TODO: Figure out actual point(s) of intersection
+		points.push(foot);
+		return points;
 	}
-	else {
-		return false;
-	}
+	return points;
 };
 
-// Reflection off edge of canvas
-Ripple.prototype.isIntersectingCanvas = function() {
-	return this.isIntersectingLine([0,0], [width, 0]) ||                // top
-		this.isIntersectingLine([width, 0], [width, height]) ||  // right
-		this.isIntersectingLine([0, height], [width, height]) || // bottom
-		this.isIntersectingLine([0, 0], [0, height]);			 // left
+// TODO: move to Arc
+Ripple.prototype.getReflectionPoints = function(points) {
+	// TODO: actually get all reflection points, not just modified perp feet
+	var ref_points = [];
+	for (var i=0; i<points.length; i++) {
+		ref_points.push(new Point(2*points[i].x-this.x, 2*points[i].y-this.y));
+	}
+	return ref_points;
+};
+
+// TODO: move to Arc
+// Returns a list of all points of collision
+Ripple.prototype.getAllCollisionPoints = function() {
+	var points = []
+	var collidables = level.getCollidables();
+    // TODO: is ripple intersecting with another ripple?
+    // TODO: is ripple intersecting with an object?
+	for (var i=0; i<collidables.length; i++) {
+		points = points.concat(this.getCollisionPoints(collidables[i][0], collidables[i][1]));
+	}
+	return points;
+};
+
+// TODO: move other methods to Arc, call from here (for each arc)
+// High-level collision detection function.
+Ripple.prototype.processCollisions = function() {
+	var points = this.getAllCollisionPoints();
+	if (points) {
+		var ref_points = this.getReflectionPoints(points);
+		for (var i=0; i<ref_points.length; i++) {
+			if (!this.isArcInList(ref_points[i])) {
+				this.arcs.push(new Arc(ref_points[i].x, ref_points[i].y, this.radius));
+			}
+		}
+	}
+	return points;
+};
+
+Ripple.prototype.isArcInList = function(point) {
+	for (var i=0; i<this.arcs.length; i++) {
+		if (point.x === this.arcs[i].x && point.y === this.arcs[i].y) {
+			return true;
+		}
+	}
+	return false;
 };
 
 Ripple.prototype.move = function() {
-	for (var i=0; i<this.tempRefPoints.length; i++) {
-		var x = this.tempRefPoints[i][0];
-		var y = this.tempRefPoints[i][1]
-		if (!([x, y] in this.drawnRefPoints)) {
-			this.drawnRefPoints[[x, y]] = true;
-			var r = new Ripple(x, y, this.radius);
-			r.timer = this.timer;
-			r.color = this.color;
-			r.drawnRefPoints = clone(this.drawnRefPoints);
-			ripples.push(r);
-		}
-	}
-	this.tempRefPoints = [];
+	this.processCollisions();
 	this.radius++;
 	this.timer--;
+	for (var i=0; i<this.arcs.length; i++) {
+		this.arcs[i].radius++;
+	}
 };
 
 Ripple.prototype.draw = function() {
@@ -106,7 +132,13 @@ Ripple.prototype.draw = function() {
 						this.color['green'] + ", " +
 						this.color['blue'] + ", " +
 						alpha + ")";
-	ctx.beginPath();
-	ctx.arc(this.x, this.y, this.radius, this.start, this.end);
-	ctx.stroke();
+	for (var i=0; i<this.arcs.length; i++) {
+		ctx.beginPath();
+		ctx.arc(this.arcs[i].x, 
+				this.arcs[i].y, 
+				this.arcs[i].radius, 
+				this.arcs[i].start, 
+				this.arcs[i].end);
+		ctx.stroke();
+	}
 };

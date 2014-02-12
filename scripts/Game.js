@@ -9,9 +9,11 @@ var height = canvas.height;
 var ripples = [];
 var maxRipples = 40;
 
-var maxTimer = 300;
+var maxTimer = 400;
 
 var timeStep = 17; // in ms, equal to (1000/desired_fps)
+
+var level = new Level();
 
 // Initialization functions
 
@@ -20,6 +22,7 @@ function drawRipple(x, y) {
     ripples.push(new Ripple(x, y));
 };
 
+// TODO: remove?
 function clone(obj) {
     if (obj == null || typeof obj != "object") return obj;
     var copy = obj.constructor();
@@ -47,24 +50,13 @@ function updateCanvas() {
     for (var i=0; i<ripples.length; i++) {
 
         // remove ripple from list
+        // TODO: do this elsewhere
         if (ripples[i].timer == 0) {
             ripples.splice(i, 1);
             continue;
         }
 
         ripples[i].move();
-
-
-        // is ripple intersecting with edge of canvas?
-        if (ripples[i].isIntersectingCanvas()) {
-            // TODO: split ripple?
-            // TODO: remove current
-            //ripples.splice(i, 1);
-            //continue;
-        }
-        // TODO: is ripple intersecting with another ripple?
-        // TODO: is ripple intersecting with an object?
-
     }
 
     // Clear canvas
