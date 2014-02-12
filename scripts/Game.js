@@ -18,6 +18,7 @@ var maxTimer = 500;
 var timeStep = 17; // in ms, equal to (1000/desired_fps)
 var intervalId = null;
 
+// TODO: load level from file
 var level = new Level();
 var paused = false;
 var game_started = false;
@@ -26,9 +27,17 @@ var game_started = false;
 ///////////////////////////////////
 // Utility classes and functions //
 ///////////////////////////////////
+
+// TODO: maybe move the screens to a new file?
+function MenuScreen() {
+    // TODO
+    this.bgFillStyle = "";
+};
+
 function WelcomeScreen() {
     this.timer = 4000;
 };
+WelcomeScreen.prototype = new MenuScreen;
 
 function drawRipple(x, y) {
     if (ripples.length < maxRipples) {
@@ -51,14 +60,7 @@ function clone(obj) {
 ////////////////////////////
 
 function mouseoverHandler(evt) {
-    // TODO
-};
-
-function menuMouseDownHandler(evt) {
-    if (!game_started) {
-        startGame();   
-        mouseDownHandler(evt);
-    }
+    // TODO: menu object highlight
 };
 
 function mouseDownHandler(evt) {
@@ -80,10 +82,12 @@ function keydownHandler(evt) {
 function pause() {
     if (paused) {
         paused = false;
+        canvas.addEventListener('mousedown', mouseDownHandler, false);
         clearInterval(intervalId);
         intervalId = setInterval(mainLoop, timeStep);
     } else {
         paused = true;
+        canvas.removeEventListener('mousedown', mouseDownHandler);
         clearInterval(intervalId);
         intervalId = setInterval(pausedLoop, timeStep);
     }
@@ -95,8 +99,8 @@ function pause() {
 //////////////////////
 
 function updateWelcomeScreen() {
-    // TODO
     ctx.save();
+    // TODO: use a WelcomeScreen object
 
     ctx.font = "2.5em Ubuntu";
     ctx.textAlign = 'center';
@@ -109,9 +113,7 @@ function updateWelcomeScreen() {
 };
 
 function updateWorld() {
-    // TODO: should the level own the ripples?
-
-    // Expand and redraw all circles, removing or splitting them if necessary.
+    // Move all circles, removing them if necessary.
     for (var i=0; i<ripples.length; i++) {
 
         // remove ripple from list
@@ -119,10 +121,8 @@ function updateWorld() {
             ripples.splice(i, 1);
             continue;
         }
-
         ripples[i].move();
     }
-
     // TODO: move all obstacles
 };
 
@@ -140,6 +140,7 @@ function updateCanvas() {
     }
 
     // TODO: draw foreground
+    // TODO: put welcome screen/menu fade here
     //   maybe obscure area outside border? would prefer to 
     //   just not draw ripples outside the border :-/
     ctx.restore();
@@ -147,6 +148,8 @@ function updateCanvas() {
 
 function updatePauseScreen() {
     ctx.save();
+
+    // TODO: use a MenuScreen object
 
     ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
     ctx.fillRect(0, 0, width, height);
@@ -191,7 +194,13 @@ function pausedLoop() {
 // Initialization functions //
 //////////////////////////////
 function initializeGame() {
-    canvas.addEventListener('mousedown', menuMouseDownHandler, false);
+    canvas.addEventListener(
+        'mousedown', 
+        function(evt) {
+            startGame();
+            mouseDownHandler(evt);
+        }, 
+        false);
     intervalId = setInterval(welcomeScreenLoop, timeStep);
 };
 
@@ -202,6 +211,7 @@ function startGame() {
     clearInterval(intervalId);
     intervalId = setInterval(mainLoop, timeStep);
 };
+
 
 ////////////////
 // Game Start //

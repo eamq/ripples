@@ -3,6 +3,7 @@
 ///////////
 function Level(border) {
 	var default_border = [
+		//new Point(100, 0),   TODO: I BREAK WITH THE OBSTACLE
 		new Point(0, 0),          // top-left
 		new Point(width, 0),      // top-right
 		new Point(width, height), // bottom-right
@@ -46,6 +47,7 @@ Level.prototype.draw = function() {
 	// draw edges
 	ctx.strokeStyle = "#000000";
 	ctx.beginPath();
+	//ctx.lineWidth = 2;
 	var last = this.border[this.border.length - 1];
 	ctx.moveTo(last.x, last.y);
 	for (var i=0; i<this.border.length; i++) {
@@ -59,8 +61,10 @@ Level.prototype.draw = function() {
 	// draw obstacles
 	ctx.strokeStyle = "#333333";
 	for (var i=0; i<this.obstacles.length; i++) {
+		// TODO: move me to Obstacle.draw
 		var last = this.obstacles[i].points[this.obstacles[i].points.length - 1];
 		ctx.beginPath();
+		ctx.lineWidth = 2;
 		ctx.moveTo(last.x, last.y);
 		for (var j=0; j<this.obstacles[i].points.length; j++) {
 			ctx.lineTo(this.obstacles[i].points[j].x, this.obstacles[i].points[j].y);
