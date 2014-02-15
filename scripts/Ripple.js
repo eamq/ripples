@@ -43,7 +43,7 @@ Ripple.prototype.move = function() {
 	this.processCollisions();
 	this.timer--;
 	for (var i=0; i<this.arcs.length; i++) {
-		this.arcs[i].radius++;
+		this.arcs[i].radius += 1.5; // TODO: Make this independent of timeStep
 	}
 };
 

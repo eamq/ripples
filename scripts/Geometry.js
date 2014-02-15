@@ -31,7 +31,8 @@ Arc.prototype.getPerpendicularFoot = function(p1, p2) {
 	var dy = p2.y - p1.y;
 	var k = (dy*(this.x-p1.x) - dx*(this.y-p1.y))/((dx*dx) + (dy*dy));
 
-	return new Point(this.x - k * dy, this.y + k * dx);
+	return new Point(Number((this.x - k * dy).toFixed(1)), 
+					Number((this.y + k * dx).toFixed(1)));
 };
 
 // Returns points of intersection with the given line segment ([] if none exist)

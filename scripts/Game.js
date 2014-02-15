@@ -19,7 +19,7 @@ var timeStep = 17; // in ms, equal to (1000/desired_fps)
 var intervalId = null;
 
 // TODO: load level from file
-var level = new Level();
+var level = null;
 var paused = false;
 var game_started = false;
 
@@ -44,6 +44,11 @@ function drawRipple(x, y) {
         ripples.push(new Ripple(x, y));
     }
 };
+
+function resizeCanvas() {
+    canvas.width = width = window.innerWidth;
+    canvas.height = height = window.innerHeight;
+}
 
 // TODO: remove?
 function clone(obj) {
@@ -87,13 +92,12 @@ function pause() {
     if (paused) {
         paused = false;
         canvas.addEventListener('mousedown', mouseDownHandler, false);
-        clearInterval(intervalId);
         intervalId = setInterval(mainLoop, timeStep);
     } else {
         paused = true;
         canvas.removeEventListener('mousedown', mouseDownHandler);
         clearInterval(intervalId);
-        intervalId = setInterval(pausedLoop, timeStep);
+        updatePauseScreen();
     }
 };
 
@@ -106,12 +110,12 @@ function updateWelcomeScreen() {
     ctx.save();
     // TODO: use a WelcomeScreen object
 
-    ctx.font = "2.5em Ubuntu";
-    ctx.textAlign = 'center';
-    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "3em Ubuntu";
+    ctx.textAlign = 'left';
+    ctx.fillStyle = "rgba(40, 120, 215, 0.4)";
     ctx.strokeStyle = "#000000";
-    ctx.fillText("ripples", width/2, height/2);
-    ctx.strokeText("ripples", width/2, height/2);
+    ctx.fillText("ripples", 0, height);
+    ctx.strokeText("ripples", 0, height);
 
     ctx.restore();
 };
@@ -132,8 +136,8 @@ function updateWorld() {
 
 function updateCanvas() {
     // Clear canvas
-    ctx.clearRect(0, 0, width, height);
     ctx.save();
+    ctx.clearRect(0, 0, width, height);
 
     // Draw level
     level.draw();
@@ -159,9 +163,10 @@ function updatePauseScreen() {
     ctx.fillRect(0, 0, width, height);
 
     // TODO: shifting gradient fill?
-    ctx.font = "2.5em Ubuntu";
+    ctx.font = "3em Ubuntu";
     ctx.textAlign = 'left';
     //ctx.textBaseline = "bottom";
+    ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#FFFFFF";
     ctx.strokeStyle = "#000000";
     ctx.fillText("paused", 0, height);
@@ -188,16 +193,14 @@ function mainLoop() {
     updateCanvas();
 };
 
-function pausedLoop() {
-    updateCanvas();
-    updatePauseScreen();
-};
-
 
 //////////////////////////////
 // Initialization functions //
 //////////////////////////////
 function initializeGame() {
+    resizeCanvas();
+    level = new Level() // TODO: load level from file
+    //window.addEventListener('resize', resizeCanvas, false);
     canvas.addEventListener('mousedown', welcomeScreenMouseDownHandler, false);
     clearInterval(intervalId);
     intervalId = setInterval(welcomeScreenLoop, timeStep);
