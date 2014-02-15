@@ -13,7 +13,7 @@ var height = canvas.height;
 var ripples = [];
 
 var maxRipples = 40;
-var maxTimer = 500;
+var maxTimer = 400; // TODO: make this independent of timeStep
 
 var timeStep = 17; // in ms, equal to (1000/desired_fps)
 var intervalId = null;

@@ -18,6 +18,7 @@ Ripple.prototype.processCollisions = function() {
 	for (var i=0; i<this.arcs.length; i++) {
 		var points = this.arcs[i].getAllCollisionPoints();
 		if (points) {
+			// TODO: chop arc into smaller arcs, determine which to no longer draw
 			var ref_points = this.arcs[i].getReflectionPoints(points);
 			for (var j=0; j<ref_points.length; j++) {
 				var arc = new Arc(ref_points[j].x, ref_points[j].y, this.arcs[i].radius);

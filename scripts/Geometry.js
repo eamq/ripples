@@ -27,8 +27,8 @@ Arc.prototype.equals = function(other) {
 };
 
 Arc.prototype.getPerpendicularFoot = function(p1, p2) {
-	var dx = p1.x - p2.x;
-	var dy = p1.y - p2.y;
+	var dx = p2.x - p1.x;
+	var dy = p2.y - p1.y;
 	var k = (dy*(this.x-p1.x) - dx*(this.y-p1.y))/((dx*dx) + (dy*dy));
 
 	return new Point(this.x - k * dy, this.y + k * dx);
@@ -39,21 +39,28 @@ Arc.prototype.getCollisionPoints = function(p1, p2) {
 	// TODO: allow me to have multiple collision points with one segment
 	points = [];
 
-	var dx = p1.x - p2.x;
-	var dy = p1.y - p2.y;
+	var dx = p2.x - p1.x;
+	var dy = p2.y - p1.y;
+	// var dr = Math.sqrt((dx*dx) + (dy*dy));
+	// var bigD = (p1.x*p2.y) - (p2.x*p1.y);
+	// var discriminant = (this.radius*this.radius)*(dr*dr) - (bigD*bigD);
+
+	// if discriminant < 0, no intersection
+	// else if disc. == 0; tangent @ foot
+	// else; 2 possible points
 
 	// is perpendicular distance greater than the radius?
-	var pd = Math.abs((dy*this.x) - (dx*this.y) + (p1.x*p2.y) - (p2.x*p1.y))/Math.sqrt((dx*dx) + (dy*dy));
+	var pd = Math.abs((dy*this.x) - (dx*this.y) + (p2.x*p1.y) - (p1.x*p2.y))/Math.sqrt((dx*dx) + (dy*dy));
 	if (pd > this.radius) {
-		return points;
-	}
+		return [];
+	} 
 
 	// will arc miss segment?
 	var angle1 = (Math.atan((p1.y-this.y)/(p1.x-this.x)) + 2*Math.PI) % 2*Math.PI;
 	var	angle2 = (Math.atan((p2.y-this.y)/(p2.x-this.x)) + 2*Math.PI) % 2*Math.PI;
 	if ((angle1 < this.start || angle1 > this.end) &&
 			(angle2 < this.start || angle2 > this.end)) {
-		return points;
+		return [];
 	}
 
 	// perpendicular foot on line segment?
@@ -61,8 +68,12 @@ Arc.prototype.getCollisionPoints = function(p1, p2) {
 	if (foot.x >= Math.min(p1.x, p2.x) && foot.x <= Math.max(p1.x, p2.x) &&
 			foot.y >= Math.min(p1.y, p2.y) && foot.y <= Math.max(p1.y, p2.y)) {
 		// TODO: Figure out actual point(s) of intersection
+		// if pd == radius, foot is the only intersection point
+		if (pd == this.radius) {
+			return [foot];
+		}
+
 		points.push(foot);
-		return points;
 	}
 	
 	// is distance from the closest endpoint less than the radius?
@@ -71,8 +82,10 @@ Arc.prototype.getCollisionPoints = function(p1, p2) {
 	if (dist < this.radius) {
 		// TODO: Figure out actual point(s) of intersection
 		points.push(foot);
-		return points;
-	}
+	} 
+	//else if (dist == this.radius) {
+	//	return []
+	//}
 	return points;
 };
 
