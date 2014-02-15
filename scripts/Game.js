@@ -117,6 +117,14 @@ function updateWelcomeScreen() {
     ctx.fillText("ripples", 0, height);
     ctx.strokeText("ripples", 0, height);
 
+    ctx.font = "0.8em Ubuntu";
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.strokeStyle = "#DDDDDD";
+    ctx.fillStyle = "#333333";
+    ctx.strokeText("\u00A9 2014 eamq.net", width - 3, height);
+    ctx.fillText("\u00A9 2014 eamq.net", width - 3, height);
+
     ctx.restore();
 };
 
