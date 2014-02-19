@@ -3,7 +3,6 @@
 ///////////
 function Level(border) {
 	var default_border = [
-		//new Point(100, 0),   TODO: I BREAK WITH THE OBSTACLE
 		new Point(0, 0),          // top-left
 		new Point(width, 0),      // top-right
 		new Point(width, height), // bottom-right
@@ -12,7 +11,9 @@ function Level(border) {
 
 	this.border = (typeof border === "undefined") ? default_border : border;
 	this.obstacles = [];
-	//this.obstacles = [new Obstacle([new Point(200, 200), new Point(200, 300), new Point(300, 300), new Point(300, 200)])];
+	//this.obstacles = [new Obstacle([new Point(300, 300), new Point(250, 200)])];
+
+	this.collidables = this.getCollidables();
 
 	// TODO: background
 	// TODO: foreground
@@ -39,7 +40,7 @@ Level.prototype.loadLevel = function(filename) {
 	// TODO: load level data from a file
 };
 
-Level.prototype.draw = function() {
+Level.prototype.drawLevel = function() {
 	ctx.save();
 
     // TODO: draw background
@@ -55,16 +56,18 @@ Level.prototype.draw = function() {
 	// TODO: fill. use alpha to let fancy backgrounds shine through?
 	// TODO: draw fancy border effect
 	
+	// TODO: draw foreground
 
-	// draw obstacles
+	ctx.restore();
+};
+
+Level.prototype.drawObstacles = function() {
+	ctx.save();
 	ctx.strokeStyle = "#333333";
 	for (var i=0; i<this.obstacles.length; i++) {
 		this.obstacles[i].draw();
 	}
-
-	// TODO: draw foreground
-
-	ctx.restore();
+	ctx.restore;
 };
 
 //////////////
@@ -84,8 +87,8 @@ Obstacle.prototype.draw = function() {
 		ctx.save();
 		ctx.beginPath();
 		ctx.lineWidth = 2;
-		for (var j=0; j<this.points.length; j++) {
-			ctx.lineTo(this.points[j].x, this.points[j].y);
+		for (var i=0; i<this.points.length; i++) {
+			ctx.lineTo(this.points[i].x, this.points[i].y);
 		}
 		ctx.closePath();
 		ctx.stroke();

@@ -6,6 +6,7 @@
 var canvasID = 'ripples';
 var canvas = document.getElementById(canvasID);
 var ctx = canvas.getContext('2d');
+var debug = false;
 
 var width = canvas.width;
 var height = canvas.height;
@@ -14,6 +15,9 @@ var ripples = [];
 
 var maxRipples = 40;
 var maxTimer = 400; // TODO: make this independent of timeStep
+
+var maxArcs = 200;
+var numArcs = 0;
 
 var timeStep = 17; // in ms, equal to (1000/desired_fps)
 var intervalId = null;
@@ -40,7 +44,7 @@ function WelcomeScreen() {
 WelcomeScreen.prototype = new MenuScreen;
 
 function drawRipple(x, y) {
-    if (ripples.length < maxRipples) {
+    if (ripples.length < maxRipples && numArcs < maxArcs) {
         ripples.push(new Ripple(x, y));
     }
 };
@@ -134,6 +138,7 @@ function updateWorld() {
 
         // remove ripple from list
         if (ripples[i].timer == 0) {
+            numArcs -= ripples[i].arcs.length;
             ripples.splice(i, 1);
             continue;
         }
@@ -147,13 +152,20 @@ function updateCanvas() {
     ctx.save();
     ctx.clearRect(0, 0, width, height);
 
-    // Draw level
-    level.draw();
+    // Draw background:
+    //   Level
+    level.drawLevel();
 
-    // Draw all ripples
+    // Draw midground:
+    //   Ripples
+    //   Obstacles
     for (var i=0; i<ripples.length; i++) {
         ripples[i].draw();
+        if (debug) {
+            ripples[i].drawCollisions();
+        }
     }
+    level.drawObstacles();
 
     // TODO: draw foreground
     // TODO: put welcome screen/menu fade here
@@ -206,7 +218,7 @@ function mainLoop() {
 // Initialization functions //
 //////////////////////////////
 function initializeGame() {
-    resizeCanvas();
+    //resizeCanvas();
     level = new Level() // TODO: load level from file
     //window.addEventListener('resize', resizeCanvas, false);
     canvas.addEventListener('mousedown', welcomeScreenMouseDownHandler, false);
