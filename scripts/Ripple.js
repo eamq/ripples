@@ -19,11 +19,10 @@ function Ripple(x, y) {
 // High-level collision detection function.
 Ripple.prototype.processCollisions = function() {
 	for (var i=0; i<this.arcs.length; i++) {
-		var points = this.arcs[i].getAllCollisionPoints();
-		//this.collision_points = points;
-		this.collision_points = this.collision_points.concat(points);
+		var collisions = this.arcs[i].getAllCollisions();
+		//this.collision_points = this.collision_points.concat(collisions.points);
 		// TODO: chop arc into smaller arcs, determine which to no longer draw
-		var ref_points = this.arcs[i].getReflectionPoints(points);
+		var ref_points = this.arcs[i].getReflectionPoints(collisions);
 		for (var j=0; j<ref_points.length; j++) {
 			if (numArcs < maxArcs) {
 				var arc = new Arc(ref_points[j], this.arcs[i].radius);
@@ -49,7 +48,7 @@ Ripple.prototype.move = function() {
 	this.processCollisions();
 	this.timer--;
 	for (var i=0; i<this.arcs.length; i++) {
-		this.arcs[i].radius += 2; // TODO: Make this independent of timeStep
+		this.arcs[i].radius += 1.5; // TODO: Make this independent of timeStep
 	}
 };
 

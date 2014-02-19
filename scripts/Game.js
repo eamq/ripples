@@ -6,17 +6,17 @@
 var canvasID = 'ripples';
 var canvas = document.getElementById(canvasID);
 var ctx = canvas.getContext('2d');
-var debug = false;
+var debug = true;
 
 var width = canvas.width;
 var height = canvas.height;
 
 var ripples = [];
 
-var maxRipples = 40;
-var maxTimer = 400; // TODO: make this independent of timeStep
+var maxRipples = 60;
+var maxTimer = 300; // TODO: make this independent of timeStep
 
-var maxArcs = 200;
+var maxArcs = 600;
 var numArcs = 0;
 
 var timeStep = 17; // in ms, equal to (1000/desired_fps)

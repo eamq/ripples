@@ -21,7 +21,7 @@ function Level(border) {
 };
 
 Level.prototype.getBorderSegments = function() {
-	return getSegments(this.border);
+	return createSegments(this.border);
 };
 
 Level.prototype.getAllObstacleSegments = function() {
@@ -80,7 +80,7 @@ function Obstacle(points) {
 };
 
 Obstacle.prototype.getObstacleSegments = function() {
-	return getSegments(this.points);
+	return createSegments(this.points);
 };
 
 Obstacle.prototype.draw = function() {
