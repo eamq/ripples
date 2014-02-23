@@ -10,8 +10,19 @@ function Level(border) {
 	];
 
 	this.border = (typeof border === "undefined") ? default_border : border;
-	this.obstacles = [];
+	//this.obstacles = [];
 	//this.obstacles = [new Obstacle([new Point(300, 300), new Point(250, 200)])];
+	//this.obstacles = [
+	//	new Obstacle([new Point(200, 200), new Point(200, 300)]), 
+	//	new Obstacle([new Point(300, 200), new Point(300, 300)])
+	//];
+	this.obstacles = [new Obstacle([new Point(300, 300), new Point(400, 300), new Point (350, 200)])];
+	//this.obstacles = [
+	//	new Obstacle([new Point(150, 100), new Point(150, 200)]), 
+	//	new Obstacle([new Point(475, 150), new Point(575, 150)]),
+	//	new Obstacle([new Point(125, 375), new Point(200, 300)]), 
+	//	new Obstacle([new Point(475, 300), new Point(550, 375)]), 
+	//];
 
 	this.collidables = this.getCollidables();
 

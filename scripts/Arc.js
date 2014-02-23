@@ -7,15 +7,19 @@ function Arc(center, radius, start, end) {
 	this.start = (typeof start === "undefined") ? 0 : start;
 	this.end = (typeof end === "undefined") ? TWO_PI : end;
 
+	this.collisions = [];
+	this.reflected_segment = null;
+	this.depth = 0;
 	this.ignore_list = []; // List of segments to ignore for collisions
 };
 
 Arc.prototype.equals = function(other) {
 	return (this.center.x === other.center.x && 
 			this.center.y === other.center.y && 
-			this.radius === other.radius && 
-			this.start === other.start && 
-			this.end === other.end);
+			//this.start === other.start && 
+			//this.end === other.end &&
+			this.radius === other.radius
+			);
 };
 
 // Returns an object denoting the 'closest' and 'farthest' points
@@ -36,18 +40,32 @@ Arc.prototype.rankEndpointsByDistance = function(seg) {
 	}
 };
 
-// Returns points of intersection with the given line segment ([] if none exist)
-Arc.prototype.getCollisionPoints = function(seg) {
+Arc.prototype.sliceArc = function(collision) {
+	// TODO: one-point collision
+	if (collision.points.length == 2) {
+		var angles = [
+			this.center.getAngle(collision.points[0]) + TWO_PI, 
+			this.center.getAngle(collision.points[1]) + TWO_PI
+		];
+		//angles.sort();
+		// TODO: check if the angles lie on the arc
+		this.start = angles[0];
+		this.end = angles[1];
+	}
+}
 
-	var points = [];
+// Returns points of intersection with the given line segment ([] if none exist)
+Arc.prototype.getCollision = function(seg) {
+
+	var collision = new Collision(seg);
 
 	if (this.radius == 0) {
-		return [];
+		return null;
 	}
 
 	// quick check for no collision
 	if (this.center.getPerpendicularDistance(seg) > this.radius) {
-		return [];
+		return null;
 	}
 
 	//// will arc miss segment?
@@ -71,18 +89,20 @@ Arc.prototype.getCollisionPoints = function(seg) {
 	var dx = x2 - x1;
 	var dy = y2 - y1;
 	var dr = Math.sqrt((dx*dx) + (dy*dy));
-	var bigD = (x1*y2) - (x2*y1);
-	var discriminant = (this.radius*this.radius)*(dr*dr) - (bigD*bigD);
+	var bigD = (x1 * y2) - (x2 * y1);
+	var discriminant = (this.radius*this.radius) * (dr*dr) - (bigD*bigD);
 
 	var foot = this.center.getPerpendicularFoot(seg);
+	collision.foot = foot;
 
 	// we already know discriminant >= 0, because of the quick check above
 	// if disc. == 0, 1 intersection (tangent line at perp. foot)
 	if (discriminant == 0) {
 		if (foot.isPerpendicularFootOnSegment(seg)) {
-			return [foot];
+			collision.points.push(foot);
+			return collision
 		} else {
-			return [];
+			return null;
 		}
 	} else {
 		// if disc. > 0, 2 (possible) intersection points
@@ -90,29 +110,41 @@ Arc.prototype.getCollisionPoints = function(seg) {
 		if (this.center.getDistance(segment['closest']) <= this.radius) {
 			if (this.center.getDistance(segment['farthest']) <= this.radius) {
 				// both endpoints are inside arc
-				// cull this segment from future collision detection
+				// cull this segment from future collision detection?
+				// TODO: expanding arcs (ie, the initial reflection) will need
+				//    to keep reflecting along the line, not just the segment
 				this.ignore_list.push(seg);
-				return [];
+				return null;
 			} 
 		} else if (!foot.isPerpendicularFootOnSegment(seg)) {
+		//if (!foot.isPerpendicularFootOnSegment(seg)) {
 			// no insersection with segment
-			return [];
+			return null;
 		}
 		// TODO: implement the rest of Rhoad's algorithm
 		// TODO find both intersection points, see if each is on segment
-		points.push(foot); // push the perp. foot for now
+		var x1 = Number(((bigD * dy + rhoadSign(dy) * dx * Math.sqrt(discriminant))/(dr * dr) + this.center.x).toFixed(2));
+		var x2 = Number(((bigD * dy - rhoadSign(dy) * dx * Math.sqrt(discriminant))/(dr * dr) + this.center.x).toFixed(2));
+		var y1 = Number(((-bigD * dx + Math.abs(dy) * Math.sqrt(discriminant))/(dr * dr) + this.center.y).toFixed(2));
+		var y2 = Number(((-bigD * dx - Math.abs(dy) * Math.sqrt(discriminant))/(dr * dr) + this.center.y).toFixed(2));
+		var intPoints = [new Point(x1, y1), new Point(x2, y2)];
+		for (var i=0; i<intPoints.length; i++) {
+			if (intPoints[i].isPointOnSegment(seg)) {
+				collision.points.push(intPoints[i]);
+			}
+		}
+		//points.push(foot); // push the perp. foot for now
 	}
-	return points;
+	if (collision.points.length > 0) {
+		return collision;
+	} else {
+		return null;
+	}
 };
 
-Arc.prototype.getReflectionPoints = function(collisions) {
-	var ref_points = [];
-
-	for (var i=0; i<collisions.length; i++) {
-		ref_points.push(new Point(Number((2*collisions[i].foot.x-this.center.x).toFixed(1)), 
-								Number((2*collisions[i].foot.y-this.center.y).toFixed(1))));
-	}
-	return ref_points;
+Arc.prototype.getReflectionPoint = function(collision) {
+	return new Point(Math.round(2 * collision.foot.x - this.center.x), 
+					 Math.round(2 * collision.foot.y - this.center.y));
 };
 
 // Returns a list of collision objects, one for each segment
@@ -130,12 +162,9 @@ Arc.prototype.getAllCollisions = function() {
     // TODO: is arc intersecting with another arc?
 
 	for (var i=0; i<collidables.length; i++) {
-		var points = this.getCollisionPoints(collidables[i]);
-		if (points.length > 0) {
-			collisions.push(new Collision(collidables[i], 
-										  points, 
-							  			  this.center.getPerpendicularFoot(collidables[i])
-			));
+		var collision = this.getCollision(collidables[i]);
+		if (collision) {
+			collisions.push(collision);
 		}
 	}
 	//return points;
@@ -143,15 +172,33 @@ Arc.prototype.getAllCollisions = function() {
 };
 
 // Requires stroke/fill style to be set prior to calling
-Arc.prototype.draw = function() {
+Arc.prototype.draw = function(counter) {
+	var counter = (typeof counter === "undefined") ? false : counter;
 	ctx.save();
 	ctx.beginPath();
 	ctx.arc(this.center.x,
 			this.center.y,
-			this.radius, 
-			this.start, 
-			this.end);
-	ctx.stroke();
+			this.radius,
+			this.start,
+			this.end,
+			counter);
+	//if (this.reflected_segment) {
+	//	ctx.fillStyle = "#FFFFFF";
+	//}
 	ctx.fill();
+	ctx.stroke();
 	ctx.restore();
 };
+
+Arc.prototype.drawCollisions = function() {
+	ctx.save();
+	ctx.strokeStyle = "#FF0000";
+	for (var i=0; i<this.collisions.length; i++) {
+		for (var j=0; j<this.collisions[i].points.length; j++) {
+			ctx.beginPath();
+			ctx.arc(this.collisions[i].points[j].x, this.collisions[i].points[j].y, 4, 0, TWO_PI);
+			ctx.stroke();
+		}
+	}
+	ctx.restore();
+}

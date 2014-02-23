@@ -3,10 +3,11 @@
 /////////////
 // GLOBALS //
 /////////////
+// TODO: put me in a config file
 var canvasID = 'ripples';
 var canvas = document.getElementById(canvasID);
 var ctx = canvas.getContext('2d');
-var debug = true;
+var debug = false;
 
 var width = canvas.width;
 var height = canvas.height;
@@ -18,6 +19,8 @@ var maxTimer = 300; // TODO: make this independent of timeStep
 
 var maxArcs = 600;
 var numArcs = 0;
+
+var maxDepth = 4; // wow, such deep, many inception
 
 var timeStep = 17; // in ms, equal to (1000/desired_fps)
 var intervalId = null;
@@ -43,7 +46,7 @@ function WelcomeScreen() {
 };
 WelcomeScreen.prototype = new MenuScreen;
 
-function drawRipple(x, y) {
+function createRipple(x, y) {
     if (ripples.length < maxRipples && numArcs < maxArcs) {
         ripples.push(new Ripple(x, y));
     }
@@ -82,7 +85,7 @@ function mouseDownHandler(evt) {
     if (evt.button == 0) {
         var x = evt.clientX - canvas.getBoundingClientRect().left;
         var y = evt.clientY - canvas.getBoundingClientRect().top;
-        drawRipple(x, y);
+        createRipple(x, y);
     }
 };
 
@@ -118,9 +121,16 @@ function updateWelcomeScreen() {
     ctx.textAlign = 'left';
     ctx.fillStyle = "rgba(40, 120, 215, 0.4)";
     ctx.strokeStyle = "#000000";
-    ctx.fillText("ripples", 0, height);
-    ctx.strokeText("ripples", 0, height);
 
+    ctx.translate(width/2, height/2);
+    ctx.fillText("ripples", -width/2, height/2);
+    ctx.strokeText("ripples", -width/2, height/2);
+    ctx.rotate(Math.PI);
+    ctx.fillText("ripples", -width/2, height/2);
+    ctx.strokeText("ripples", -width/2, height/2);
+    ctx.restore();
+
+    ctx.save();
     ctx.font = "0.8em Ubuntu";
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
@@ -142,6 +152,8 @@ function updateWorld() {
             ripples.splice(i, 1);
             continue;
         }
+
+        // move ripple
         ripples[i].move();
     }
     // TODO: move all obstacles
@@ -152,9 +164,7 @@ function updateCanvas() {
     ctx.save();
     ctx.clearRect(0, 0, width, height);
 
-    // Draw background:
-    //   Level
-    level.drawLevel();
+    // TODO: Draw background:
 
     // Draw midground:
     //   Ripples
@@ -167,7 +177,13 @@ function updateCanvas() {
     }
     level.drawObstacles();
 
-    // TODO: draw foreground
+    // Draw foreground
+    //   Level
+    level.drawLevel();
+    // Yeah, it's weird having the level in the foreground. This is to ensure
+    // that the ripples don't show on top of the borders/obstacles they're
+    // reflecting off of. 
+
     // TODO: put welcome screen/menu fade here
     //   maybe obscure area outside border? would prefer to 
     //   just not draw ripples outside the border :-/
@@ -200,6 +216,7 @@ function updatePauseScreen() {
 // MAIN RUNTIME LOOPS //
 ////////////////////////
 function welcomeScreenLoop(){
+    updateWorld();
     updateCanvas();
     updateWelcomeScreen();
 };

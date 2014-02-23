@@ -7,8 +7,6 @@ function Ripple(x, y) {
 	this.arcs = [new Arc(new Point(x, y))];
 	numArcs++;
 
-	this.collision_points = [];
-
 	this.color = {
 		'red': Math.round(Math.random() * 215),
 		'green': Math.round(Math.random() * 215),
@@ -19,17 +17,24 @@ function Ripple(x, y) {
 // High-level collision detection function.
 Ripple.prototype.processCollisions = function() {
 	for (var i=0; i<this.arcs.length; i++) {
-		var collisions = this.arcs[i].getAllCollisions();
-		//this.collision_points = this.collision_points.concat(collisions.points);
-		// TODO: chop arc into smaller arcs, determine which to no longer draw
-		var ref_points = this.arcs[i].getReflectionPoints(collisions);
-		for (var j=0; j<ref_points.length; j++) {
-			if (numArcs < maxArcs) {
-				var arc = new Arc(ref_points[j], this.arcs[i].radius);
-				if (!this.isArcInList(arc)) {
-					this.arcs.push(arc);
-					numArcs++;
-				}
+		this.arcs[i].collisions = this.arcs[i].getAllCollisions(); //TODO: move me after depth check for opto
+		for (var j=0; j<this.arcs[i].collisions.length; j++) {
+			// TODO: chop arc into smaller arcs, determine which to no longer draw
+			//this.arcs[i].sliceArc(this.arcs[i].collisions[j]);
+			// don't reflect, but still intersect
+			if (this.arcs[i].depth >= maxDepth) {
+				continue;
+			}
+			var ref_point = this.arcs[i].getReflectionPoint(this.arcs[i].collisions[j]);
+			if (!ref_point || numArcs >= maxArcs) {
+				continue;
+			}
+			var arc = new Arc(ref_point, this.arcs[i].radius, this.start, this.end);
+			arc.reflected_segment = this.arcs[i].collisions[j].segment;
+			if (!this.isArcInList(arc)) {
+				arc.depth = this.arcs[i].depth + 1;
+				this.arcs.push(arc);
+				numArcs++;
 			}
 		}
 	}
@@ -73,14 +78,7 @@ Ripple.prototype.draw = function() {
 };
 
 Ripple.prototype.drawCollisions = function() {
-	if (this.collision_points.length > 0) {
-		ctx.save();
-		ctx.strokeStyle = "#FF0000";
-		for (var j=0; j<this.collision_points.length; j++) {
-			ctx.beginPath();
-			ctx.arc(this.collision_points[j].x, this.collision_points[j].y, 10, 0, TWO_PI);
-			ctx.stroke();
-		}
-		ctx.restore();
+	for (var i=0; i<this.arcs.length; i++) {
+		this.arcs[i].drawCollisions();
 	}
 };
