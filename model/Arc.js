@@ -69,7 +69,6 @@ Arc.prototype.getCollision = function(seg) {
 	}
 
 	//// will arc miss segment?
-	//// TODO: this will probably need to be revised in order to properly expand arcs
 	//var angle1 = (Math.atan((seg.p1.y-this.center.y)/(seg.p1.x-this.center.x)) + TWO_PI) % TWO_PI;
 	//var angle2 = (Math.atan((seg.p2.y-this.center.y)/(seg.p2.x-this.center.x)) + TWO_PI) % TWO_PI;
 	//if ((angle1 < this.start || angle1 > this.end) &&
@@ -110,19 +109,19 @@ Arc.prototype.getCollision = function(seg) {
 		if (this.center.getDistance(segment['closest']) <= this.radius) {
 			if (this.center.getDistance(segment['farthest']) <= this.radius) {
 				// both endpoints are inside arc
-				// cull this segment from future collision detection?
-				// TODO: expanding arcs (ie, the initial reflection) will need
-				//    to keep reflecting along the line, not just the segment
 				this.ignore_list.push(seg);
 				return null;
 			} 
+			// one endpoint is inside arc, continue to find intersection
 		} else if (!foot.isPerpendicularFootOnSegment(seg)) {
-		//if (!foot.isPerpendicularFootOnSegment(seg)) {
 			// no insersection with segment
 			return null;
 		}
-		// TODO: implement the rest of Rhoad's algorithm
-		// TODO find both intersection points, see if each is on segment
+		// Helper function for determining sign
+		function rhoadSign(x) {
+			if (x < 0) { return -1;	}
+			else { return 1; }
+		};
 		var x1 = Number(((bigD * dy + rhoadSign(dy) * dx * Math.sqrt(discriminant))/(dr * dr) + this.center.x).toFixed(2));
 		var x2 = Number(((bigD * dy - rhoadSign(dy) * dx * Math.sqrt(discriminant))/(dr * dr) + this.center.x).toFixed(2));
 		var y1 = Number(((-bigD * dx + Math.abs(dy) * Math.sqrt(discriminant))/(dr * dr) + this.center.y).toFixed(2));
@@ -133,7 +132,6 @@ Arc.prototype.getCollision = function(seg) {
 				collision.points.push(intPoints[i]);
 			}
 		}
-		//points.push(foot); // push the perp. foot for now
 	}
 	if (collision.points.length > 0) {
 		return collision;
@@ -142,6 +140,18 @@ Arc.prototype.getCollision = function(seg) {
 	}
 };
 
+Arc.prototype.getComplexCollision = function(arc) {
+	var collision = new Collision(arc);
+	var dist = this.center.getDistance(arc.center);
+
+	if (dist > this.radius + arc.radius ||  	          // arcs are separate
+			dist < Math.abs(this.radius - arc.radius) ||  // one arc contains the other
+			(dist == 0 && this.radius == arc.radius)) {   // arcs are the same, infinite number of intersections
+		return null
+	}
+	// TODO: complex collision
+}
+
 Arc.prototype.getReflectionPoint = function(collision) {
 	return new Point(Math.round(2 * collision.foot.x - this.center.x), 
 					 Math.round(2 * collision.foot.y - this.center.y));
@@ -149,7 +159,7 @@ Arc.prototype.getReflectionPoint = function(collision) {
 
 // Returns a list of collision objects, one for each segment
 // that the ripple is colliding with.
-Arc.prototype.getAllCollisions = function() {
+Arc.prototype.getAllCollisions = function(level) {
 	var collisions = [];
 
 	// cull the list of collidables
@@ -170,35 +180,3 @@ Arc.prototype.getAllCollisions = function() {
 	//return points;
 	return collisions;
 };
-
-// Requires stroke/fill style to be set prior to calling
-Arc.prototype.draw = function(counter) {
-	var counter = (typeof counter === "undefined") ? false : counter;
-	ctx.save();
-	ctx.beginPath();
-	ctx.arc(this.center.x,
-			this.center.y,
-			this.radius,
-			this.start,
-			this.end,
-			counter);
-	//if (this.reflected_segment) {
-	//	ctx.fillStyle = "#FFFFFF";
-	//}
-	ctx.fill();
-	ctx.stroke();
-	ctx.restore();
-};
-
-Arc.prototype.drawCollisions = function() {
-	ctx.save();
-	ctx.strokeStyle = "#FF0000";
-	for (var i=0; i<this.collisions.length; i++) {
-		for (var j=0; j<this.collisions[i].points.length; j++) {
-			ctx.beginPath();
-			ctx.arc(this.collisions[i].points[j].x, this.collisions[i].points[j].y, 4, 0, TWO_PI);
-			ctx.stroke();
-		}
-	}
-	ctx.restore();
-}

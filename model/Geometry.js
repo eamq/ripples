@@ -32,8 +32,9 @@ Point.prototype.getPerpendicularDistance = function(seg) {
 };
 
 Point.prototype.isPointOnSegment = function(seg) {
+	var epsilon = 0.5;
 	var crossproduct = Number(((this.y - seg.p1.y) * (seg.p2.x - seg.p1.x) - (this.x - seg.p1.x) * (seg.p2.y - seg.p1.y)).toFixed(3));
-	if (Math.abs(crossproduct) > EPSILON) {
+	if (Math.abs(crossproduct) > epsilon) {
 		return false;
 	}
 	var dotproduct = (this.x - seg.p1.x) * (seg.p2.x - seg.p1.x) + (this.y - seg.p1.y) * (seg.p2.y - seg.p1.y);
@@ -62,21 +63,6 @@ function Segment(p1, p2) {
 	this.p2 = p2;
 };
 
-
-/////////////////////
-// Collision class //
-/////////////////////
-function Collision(segment, points, foot) {
-	this.segment = segment;
-	this.points = (typeof points === "undefined") ? [] : points;
-	this.foot = (typeof foot === "undefined") ? null : foot;
-};
-
-
-///////////////////////////////
-// Geometry helper functions //
-///////////////////////////////
-
 // segments will be created between adjacent points
 // in "points", and the last point will be connected to the first.
 function createSegments(points) {
@@ -94,16 +80,12 @@ function createSegments(points) {
     return segments;
 };
 
-function rhoadSign(x) {
-	if (x < 0) {
-		return -1;
-	}
-	return 1;
+
+/////////////////////
+// Collision class //
+/////////////////////
+function Collision(segment, points, foot) {
+	this.segment = segment;
+	this.points = (typeof points === "undefined") ? [] : points;
+	this.foot = (typeof foot === "undefined") ? null : foot;
 };
-
-
-///////////////
-// Constants //
-///////////////
-var TWO_PI = 2 * Math.PI;
-var EPSILON = 0.5;
