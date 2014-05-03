@@ -55,13 +55,15 @@ Arc.prototype.sliceArc = function(collision) {
 }
 
 // Returns points of intersection with the given line segment ([] if none exist)
-Arc.prototype.getCollision = function(seg) {
+Arc.prototype.getSegmentCollision = function(seg) {
 
 	var collision = new Collision(seg);
 
 	if (this.radius == 0) {
 		return null;
 	}
+
+	// TODO: axis-aligned bounding box
 
 	// quick check for no collision
 	if (this.center.getPerpendicularDistance(seg) > this.radius) {
@@ -140,16 +142,27 @@ Arc.prototype.getCollision = function(seg) {
 	}
 };
 
-Arc.prototype.getComplexCollision = function(arc) {
-	var collision = new Collision(arc);
+Arc.prototype.getCircleCollision = function(arc) {
+	//var collision = new Collision(arc);
 	var dist = this.center.getDistance(arc.center);
 
 	if (dist > this.radius + arc.radius ||  	          // arcs are separate
-			dist < Math.abs(this.radius - arc.radius) ||  // one arc contains the other
-			(dist == 0 && this.radius == arc.radius)) {   // arcs are the same, infinite number of intersections
+			(dist == 0 && this.radius == arc.radius) ||   // arcs are the same, infinite number of intersections
+			dist < Math.abs(this.radius - arc.radius)) {  // one arc contains the other
 		return null
 	}
-	// TODO: complex collision
+	var foot = new Point(((this.center.x * arc.radius) + (arc.center.x * this.radius)) / (this.radius + arc.radius), 
+						  ((this.center.y * arc.radius) + (arc.center.y * this.radius)) / (this.radius + arc.radius));
+	if (dist == this.radius + arc.radius) {
+		return new Collision(arc, [foot], foot);
+	}
+	var intDist = this.center.getDistance(foot);
+	var offsetAngle = this.center.getAngle(arc.center) + Math.atan(Math.sqrt((this.radius * this.radius) - (intDist * intDist)) / intDist);
+	var offsetX = Math.cos(offsetAngle) * this.radius;
+	var offsetY = Math.sin(offsetAngle) * this.radius;
+	var p1 = new Point(this.center.x + offsetX, this.center.y + offsetY);
+	var p2 = new Point(arc.center.x - offsetX, arc.center.y - offsetY);
+	return new Collision(arc, [p1, p2], foot);
 }
 
 Arc.prototype.getReflectionPoint = function(collision) {
@@ -159,7 +172,7 @@ Arc.prototype.getReflectionPoint = function(collision) {
 
 // Returns a list of collision objects, one for each segment
 // that the ripple is colliding with.
-Arc.prototype.getAllCollisions = function(level) {
+Arc.prototype.getSegmentCollisions = function(level) {
 	var collisions = [];
 
 	// cull the list of collidables
@@ -169,14 +182,12 @@ Arc.prototype.getAllCollisions = function(level) {
 		collidables.splice(collidables.indexOf(this.ignore_list[i]), 1);
 	}
 
-    // TODO: is arc intersecting with another arc?
-
 	for (var i=0; i<collidables.length; i++) {
-		var collision = this.getCollision(collidables[i]);
+		var collision = this.getSegmentCollision(collidables[i]);
 		if (collision) {
 			collisions.push(collision);
 		}
 	}
-	//return points;
+
 	return collisions;
 };

@@ -2,81 +2,79 @@
 // Engine //
 ////////////
 // Main controller. Initializes the game engine, creates the view, and shows the welcome screen.
-function Engine() {
-    // TODO: Globals
+function Engine(canvas) {
+    // Globals
     this.intervalId = null;
+    this.timeStep = 17; // in ms, equal to (1000/desired_fps)
 
     // Game state
-    // TODO: Model
     this.paused = false;
     this.world = new World();
 
-    // View
-    this.renderer = new Renderer();
+    // TODO: an actual View
+    this.renderer = new Renderer(canvas);
 
     // Hack for scope issues with using 'this' in callbacks and handlers
     var self = this;
 
-    // Input Handlers
+    // "Press Start"
     this.welcomeScreenMouseDownHandler = function(evt) {
-        canvas.removeEventListener('mousedown', self.welcomeScreenMouseDownHandler);
-        self.run();
-        self.mouseDownHandler(evt);
+        if (evt.button == 0) {
+            self.renderer.removeEventListener('mousedown', self.welcomeScreenMouseDownHandler);
+            self.renderer.addEventListener('keydown', self.keydownHandler, true);
+            self.run();
+            self.mouseDownHandler(evt);
+        }
     }
 
+    // Click to create a ripple
     this.mouseDownHandler = function(evt) {
         if (evt.button == 0) {
-            var x = evt.clientX - canvas.getBoundingClientRect().left;
-            var y = evt.clientY - canvas.getBoundingClientRect().top;
+            // TODO: move canvas math to View (abstract pixels from in-game units)
+            var x = evt.clientX - self.renderer.canvas.getBoundingClientRect().left;
+            var y = evt.clientY - self.renderer.canvas.getBoundingClientRect().top;
             self.world.createRipple(x, y);
         }
     };
 
+    // ESC to pause
     this.keydownHandler = function(evt) {
         if (evt.keyCode == 27) {
-            self.pause();
+            self.togglePause();
         }
     };
 
     // Show welcome screen
-    canvas.addEventListener('mousedown', self.welcomeScreenMouseDownHandler, false);
-    this.render();
+    this.renderer.addEventListener('mousedown', self.welcomeScreenMouseDownHandler, false);
+    this.renderer.render(this.world);
     this.renderer.welcome();
 };
 
+// Runs the game by initalizing the main loop
 Engine.prototype.run = function() {
-    var self = this;
-    canvas.addEventListener('mousedown', self.mouseDownHandler, false);
-    window.addEventListener('keydown', self.keydownHandler, true);
+    this.renderer.addEventListener('mousedown', this.mouseDownHandler, false);
     clearInterval(this.intervalId);
+    var self = this; // Hack for scope issue inside setInterval
     this.intervalId = setInterval(function() {
         // MAIN LOOP
-        // TODO: use this layer for gameplay stuff (win/lose state)
         // TODO: win condition
         // TODO: lose condition?
         // TODO: pause
-        self.update();
-        self.render();
-    }, timeStep);
+        self.world.update();
+        self.renderer.render(self.world);
+    }, this.timeStep);
 };
 
-Engine.prototype.pause = function() {
+
+// Pauses/unpauses the game
+Engine.prototype.togglePause = function() {
     if (this.paused) {
         this.paused = false;
         this.run();
     } else {
         this.paused = true;
-        canvas.removeEventListener('mousedown', this.mouseDownHandler);
+        this.renderer.removeEventListener('mousedown', this.mouseDownHandler);
         clearInterval(this.intervalId);
         this.renderer.pause();
     }
-};
-
-Engine.prototype.update = function() {
-    this.world.update();
-};
-
-Engine.prototype.render = function(world) {
-    world = (typeof world === "undefined") ? this.world : world;
-    this.renderer.render(world);
 };

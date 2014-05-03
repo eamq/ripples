@@ -1,10 +1,10 @@
 ////////////
 // Ripple //
 ////////////
-function Ripple(x, y) { 
-	this.timer = maxTimer;
+function Ripple(point, maxTimer) { 
+	this.timer = this.maxTimer = maxTimer;
 
-	this.arcs = [new Arc(new Point(x, y))];
+	this.arcs = [new Arc(point)];
 
 	this.color = {
 		'red': Math.round(Math.random() * 215),

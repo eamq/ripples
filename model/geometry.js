@@ -4,7 +4,6 @@
 function Point(x, y) {
 	this.x = x;
 	this.y = y;
-
 };
 
 Point.prototype.getDistance = function(other) {
@@ -84,8 +83,8 @@ function createSegments(points) {
 /////////////////////
 // Collision class //
 /////////////////////
-function Collision(segment, points, foot) {
-	this.segment = segment;
+function Collision(collidee, points, foot) {
+	this.collidee = collidee;
 	this.points = (typeof points === "undefined") ? [] : points;
 	this.foot = (typeof foot === "undefined") ? null : foot;
 };
